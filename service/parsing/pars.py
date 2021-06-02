@@ -4,7 +4,6 @@
 # pip install --upgrade requests
 
 import flask
-import os
 import os.path
 import pickle
 import json
@@ -96,8 +95,8 @@ def test_api_request():
         fav=data6(bpm=heart_point.get('bpm'), time = (heart_point.get('time')), datasource = heart_point.get('data source'))
         db.session.add(fav)
         db.session.commit()
-    return json.dumps(heart_list, indent=4) # flask.jsonify(heart_data)
-    #return redirect("http://127.0.0.1:5000")
+    return redirect("http://127.0.0.1:5000") #json.dumps(heart_list, indent=4) # flask.jsonify(heart_data)
+    #return 
 
 @app.route('/authorize')
 def authorize():
@@ -106,7 +105,6 @@ def authorize():
     flow.redirect_uri = flask.url_for('oauth2callback', _external=True)
     authorization_url, state = flow.authorization_url(
         access_type='offline',include_granted_scopes='true')
-
     flask.session['state'] = state
     return flask.redirect(authorization_url)
 
@@ -127,6 +125,13 @@ def oauth2callback():
 
     return flask.redirect(flask.url_for('test_api_request'))
 
+@app.route('/clear')
+def clear_credentials():
+  if 'credentials' in flask.session:
+    del flask.session['credentials']
+  return ('Credentials have been cleared.<br><br>' +
+          print_index_table())
+
 def credentials_to_dict(credentials):
   return {'token': credentials.token,
           'refresh_token': credentials.refresh_token,
@@ -137,7 +142,8 @@ def credentials_to_dict(credentials):
 
 def print_index_table():
   return ('<table>' +
-          '<tr><td><a href="/test">Get heart rate data</a></td></tr>')
+          '<tr><td><a href="/test">Get heart rate data</a></td></tr>' +
+          '<tr><td><a href="/clear">Clear credentials</a></td></tr>')
 
 if __name__ == '__main__':
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
